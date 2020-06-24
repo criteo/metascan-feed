@@ -17,6 +17,8 @@ This project is released under Apache 2.0 license.
 Metascan aims to allow anyone to write checks with ease in any supported
 scripting language.
 
+Currently only nse scripts are supported. It uses an embedded DSL in Lua.
+
 In the end, Metascan will list the available scripts and run them as
 part of its continuous scans in order to ensure non-regression and
 find new vulnerabilities.
