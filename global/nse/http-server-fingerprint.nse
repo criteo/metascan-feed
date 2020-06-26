@@ -62,5 +62,9 @@ action = function(host, port)
     return detected(true, {{key="detected_header", value="X-Powered-By"}})
   end
 
+  if response.header['server'] ~= nil then
+    return detected(true, {{key="detected_header", value="server"}})
+  end
+
   return detected(false, nil, "No header helping to fingerprint software stack.")
 end
