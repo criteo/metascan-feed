@@ -58,6 +58,15 @@ end
 
 
 ---
+-- Check if the consul agent version is lower than 1.6.0.
+---
+version_lt_1_6_0 = function(agent_info)
+  _, _, v1, v2, _ = string.find( agent_info["Config"]["Version"], "(%d+)%.(%d+)%.(%d+)" )
+  return tonumber(v1) <= 1 and tonumber(v2) < 6
+end
+
+
+---
 -- Check if the remote write is allowed and not restricted to localhost
 ---
 is_remote_write_allowed = function(agent_info)
@@ -67,7 +76,9 @@ is_remote_write_allowed = function(agent_info)
   end
 
   local ips = map(function(e) return e['IP'] end, allow_from)
-  if #allow_from == 2 and has_value(ips, '127.0.0.0') and has_value(ips, '::1') then
+  if version_lt_1_6_0(agent_info) and #allow_from == 2 and has_value(ips, '127.0.0.0') and has_value(ips, '::1') then
+    return false
+  elseif not(version_lt_1_6_0(agent_info)) and #allow_from == 2 and has_value(allow_from, '127.0.0.0/8') and has_value(allow_from, '::1/128') then
     return false
   end
   return true
