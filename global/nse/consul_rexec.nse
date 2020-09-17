@@ -72,16 +72,16 @@ end
 is_remote_write_allowed = function(agent_info)
   local allow_from = agent_info['DebugConfig']['AllowWriteHTTPFrom']
   if allow_from == nil then
-    return true
+    return true, allow_from
   end
 
   local ips = map(function(e) return e['IP'] end, allow_from)
   if version_lt_1_6_0(agent_info) and #allow_from == 2 and has_value(ips, '127.0.0.0') and has_value(ips, '::1') then
-    return false
+    return false, allow_from
   elseif not(version_lt_1_6_0(agent_info)) and #allow_from == 2 and has_value(allow_from, '127.0.0.0/8') and has_value(allow_from, '::1/128') then
-    return false
+    return false, allow_from
   end
-  return true
+  return true, allow_from
 end
 
 
@@ -115,8 +115,15 @@ action = function(host, port)
     return detected(false, "No JSON. Probably not Consul.")
   end
 
-  if script_checks_enabled(agent_info) and is_remote_write_allowed(agent_info) then
-    return detected(true)
+  if script_checks_enabled(agent_info) then
+    local allowed, allow_from = is_remote_write_allowed(agent_info)
+    if allowed then
+      local additional_info = {}
+      for i, v in ipairs(allow_from) do
+        additional_info[i] = {key="consul_remote_write_allowed_from", value=v}
+      end
+      return detected(true, additional_info)
+    end
   end
   return detected(false)
 end
